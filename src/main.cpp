@@ -4,6 +4,7 @@
 #include "armor_matcher.h"
 #include "number_recognizer.h"
 #include "camera_param.h"
+#include "pose_solver.h"
 
 int main() {
     //加载相机参数
@@ -16,6 +17,7 @@ int main() {
     LightBarDetector detector;
     ArmorMatcher matcher;
     NumberRecognizer recognizer;
+    PoseSolver pose_solver(cam_param); // 初始化 PnP 解算器
 
     // 打开视频文件(注意修改视频路径)
     cv::VideoCapture cap("C:\\Users\\March\\Desktop\\my-cv-project\\test02.mp4");
@@ -39,6 +41,11 @@ int main() {
         // 数字ROI提取
         recognizer.process(armors, frame);
 
+        // PnP 解算
+        for (auto& armor : armors) {
+            pose_solver.solve(armor);
+        }
+
         // 可视化
         for (const auto& armor : armors) {
             // 绘制灯条
@@ -52,6 +59,13 @@ int main() {
             cv::circle(frame, armor.center, 5, cv::Scalar(0, 0, 255), -1);
             cv::putText(frame, std::to_string(armor.number), armor.center,
                 cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 255), 2);
+
+            // 画 PnP 距离结果
+            if (armor.distance > 0) {
+                std::string dist_str = std::to_string(armor.distance).substr(0, 4) + "m";
+                cv::putText(frame, dist_str, armor.center + cv::Point2f(0, 30),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(0, 255, 0), 2);
+            }
         }
 
         // 显示结果
