@@ -3,15 +3,22 @@
 #include "light_bar_detector.h"
 #include "armor_matcher.h"
 #include "number_recognizer.h"
+#include "camera_param.h"
 
 int main() {
+    //加载相机参数
+    CameraParam cam_param;
+    if (!cam_param.loadFromYaml("C:\\Users\\March\\Desktop\\my-cv-project\\camera_info.yaml")) {
+        std::cerr << "Error: Cannot load camera_info.yaml" << std::endl;
+        return -1;
+    }
     // 初始化模块
     LightBarDetector detector;
     ArmorMatcher matcher;
     NumberRecognizer recognizer;
 
     // 打开视频文件(注意修改视频路径)
-    cv::VideoCapture cap("test1.mp4");
+    cv::VideoCapture cap("C:\\Users\\March\\Desktop\\my-cv-project\\test02.mp4");
     if (!cap.isOpened()) {
         std::cerr << "Error: Cannot open video file." << std::endl;
         return -1;

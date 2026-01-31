@@ -21,7 +21,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 file(GLOB SOURCES "src/*.cpp")
 
 
-add_executable(AutoAimApp ${SOURCES} "include/number_recognizer.h" "src/armor_matcher.cpp" "src/number_recognizer.cpp")
+add_executable(AutoAimApp ${SOURCES} "include/number_recognizer.h" "src/armor_matcher.cpp" "src/number_recognizer.cpp" "include/camera_param.h")
 
 
 target_link_libraries(AutoAimApp ${OpenCV_LIBS})

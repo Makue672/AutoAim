@@ -39,3 +39,27 @@
 
 # debug information files
 *.dwo
+
+# Visual Studio 临时文件和缓存
+.vs/
+out/
+build/
+bin/
+obj/
+
+# 编译生成的执行文件和库
+*.exe
+*.pdb
+*.ilk
+*.lib
+*.dll
+
+# CMake 生成的中间文件
+CMakeCache.txt
+CMakeFiles/
+CMakeSettings.json
+cmake_install.cmake
+
+# 操作系统临时文件
+.DS_Store
+Thumbs.db
