@@ -1,5 +1,16 @@
 #include "number_recognizer.h"
 
+NumberRecognizer::NumberRecognizer() {
+    // 尝试加载模型
+    try {
+        svm_ = cv::ml::SVM::load("svm_model.xml");
+    }
+    catch (...) {
+        std::cerr << "Warning: svm_model.xml not found! Recognition will fail." << std::endl;
+        svm_ = nullptr;
+    }
+}
+
 void NumberRecognizer::process(std::vector<Armor>& armors, const cv::Mat& src) {
     // 目标ROI大小（标准SVM输入大小）
     const int roi_size = 32;
@@ -37,6 +48,16 @@ void NumberRecognizer::process(std::vector<Armor>& armors, const cv::Mat& src) {
         cv::threshold(roi, roi, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 
         armor.number_img = roi;
-        armor.number = 0; // 暂无识别能力，标记为0
+        
+        // SVM 预测
+        if (svm_ && !svm_->empty()) {
+            cv::Mat sample = roi.reshape(1, 1); // 展平
+            sample.convertTo(sample, CV_32F);   // 转化为float
+            float result = svm_->predict(sample);
+            armor.number = static_cast<int>(result);
+        }
+        else {
+            armor.number = 0;
+        }
     }
 }

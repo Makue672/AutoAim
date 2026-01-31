@@ -77,6 +77,7 @@ int main() {
             }
         }
 
+        //滑动条调试，实时传输阈值参数
         cv::Mat debug_bin;
         std::vector<cv::Mat> ch;
         cv::split(frame, ch);
