@@ -3,7 +3,7 @@
 NumberRecognizer::NumberRecognizer() {
     // ≥¢ ‘º”‘ÿƒ£–Õ
     try {
-        svm_ = cv::ml::SVM::load("svm_model.xml");
+        svm_ = cv::ml::SVM::load("C:/Users/March/Desktop/AutoAim/svm_model.xml");
     }
     catch (...) {
         std::cerr << "Warning: svm_model.xml not found! Recognition will fail." << std::endl;
@@ -42,7 +42,7 @@ void NumberRecognizer::process(std::vector<Armor>& armors, const cv::Mat& src) {
         cv::Point2f center = (src_pts[0] + src_pts[1] + src_pts[2] + src_pts[3]) / 4.0f;
 
         float scale_height = 2.00f; //
-        float scale_width = 1.05f;  //
+        float scale_width = 0.80f;  //
 
         for (int i = 0; i < 4; i++) {
             cv::Point2f vec = src_pts[i] - center;

@@ -7,7 +7,7 @@
 #include "pose_solver.h"
 
 // 滑动条绑定变量
-int debug_threshold = 50;
+int debug_threshold = 95;
 
 int main() {
     //加载相机参数
