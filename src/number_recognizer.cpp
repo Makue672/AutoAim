@@ -38,6 +38,18 @@ void NumberRecognizer::process(std::vector<Armor>& armors, const cv::Mat& src) {
         src_pts[2] = (r_pts[2] + r_pts[3]) / 2.0f; // 右灯条下中心
         src_pts[3] = (l_pts[2] + l_pts[3]) / 2.0f; // 左灯条下中心
 
+        // 计算当前框的中心
+        cv::Point2f center = (src_pts[0] + src_pts[1] + src_pts[2] + src_pts[3]) / 4.0f;
+
+        float scale_height = 2.00f; //
+        float scale_width = 1.05f;  //
+
+        for (int i = 0; i < 4; i++) {
+            cv::Point2f vec = src_pts[i] - center;
+            src_pts[i].x = center.x + vec.x * scale_width;
+            src_pts[i].y = center.y + vec.y * scale_height;
+        }
+
         // 计算透视矩阵并应用
         cv::Mat M = cv::getPerspectiveTransform(src_pts, dst_pts.data());
         cv::Mat roi;

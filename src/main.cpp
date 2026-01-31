@@ -27,7 +27,7 @@ int main() {
     cv::createTrackbar("Threshold", "Debug Control", &debug_threshold, 255);
 
     // 打开视频文件(注意修改视频路径)
-    cv::VideoCapture cap("C:\\Users\\March\\Desktop\\my-cv-project\\test01.avi");
+    cv::VideoCapture cap("C:\\Users\\March\\Desktop\\my-cv-project\\test02.mp4");
     if (!cap.isOpened()) {
         std::cerr << "Error: Cannot open video file." << std::endl;
         return -1;
