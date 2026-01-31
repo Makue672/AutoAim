@@ -6,6 +6,9 @@
 #include "camera_param.h"
 #include "pose_solver.h"
 
+// 滑动条绑定变量
+int debug_threshold = 50;
+
 int main() {
     //加载相机参数
     CameraParam cam_param;
@@ -19,8 +22,12 @@ int main() {
     NumberRecognizer recognizer;
     PoseSolver pose_solver(cam_param); // 初始化 PnP 解算器
 
+    // 创建调试窗口和滑动条
+    cv::namedWindow("Debug Control", cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("Threshold", "Debug Control", &debug_threshold, 255);
+
     // 打开视频文件(注意修改视频路径)
-    cv::VideoCapture cap("C:\\Users\\March\\Desktop\\my-cv-project\\test02.mp4");
+    cv::VideoCapture cap("C:\\Users\\March\\Desktop\\my-cv-project\\test01.avi");
     if (!cap.isOpened()) {
         std::cerr << "Error: Cannot open video file." << std::endl;
         return -1;
@@ -31,6 +38,8 @@ int main() {
 		cap >> frame;             // 读取一帧
 		if (frame.empty()) break; // 视频结束
 
+        // 每一帧都把滑动条的值传给detector
+        detector.setThreshold(debug_threshold);
 
         // 灯条检测(在此处更改敌军颜色)
         auto light_bars = detector.detect(frame, EnemyColor::RED);
@@ -67,6 +76,13 @@ int main() {
                     cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(0, 255, 0), 2);
             }
         }
+
+        cv::Mat debug_bin;
+        std::vector<cv::Mat> ch;
+        cv::split(frame, ch);
+        cv::Mat gray_temp = ch[2] - ch[0]; // 假设红色
+        cv::threshold(gray_temp, debug_bin, debug_threshold, 255, cv::THRESH_BINARY);
+        cv::imshow("Binary Debug", debug_bin);
 
         // 显示结果
         cv::imshow("Auto Aim", frame);

@@ -48,3 +48,13 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
 
     return light_bars;
 }
+
+// 设置阈值方法
+void LightBarDetector::setThreshold(int threshold) {
+    color_threshold_ = threshold;
+}
+
+// 获取阈值方法
+int LightBarDetector::getThreshold() const {
+    return color_threshold_;
+}
