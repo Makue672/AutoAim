@@ -43,9 +43,10 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars) 
         return a.score < b.score;
         });
 
-    // 贪心算法生成最终结果
+	// 记录已使用的灯条，防止重复使用
     std::vector<bool> used(light_bars.size(), false);
-
+    
+    // 贪心算法生成最终结果
     for (const auto& c : candidates) {
         // 如果这两个灯条都还没被使用过
         if (!used[c.idx1] && !used[c.idx2]) {
@@ -94,7 +95,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars) 
 bool ArmorMatcher::isArmor(const LightBar& lb1, const LightBar& lb2) {
     // 角度差筛选
     float angle_diff = std::abs(lb1.angle - lb2.angle);
-    if (angle_diff > 15.0f) return false; 
+    if (angle_diff > 8.0f) return false; 
 
     // 长度差筛选
     float len1 = std::max(lb1.rect.size.width, lb1.rect.size.height);
@@ -106,9 +107,9 @@ bool ArmorMatcher::isArmor(const LightBar& lb1, const LightBar& lb2) {
     float avg_len = (len1 + len2) / 2.0f;
     float ratio = dis / avg_len;
 
-    // 范围需覆盖小装甲板(约2.3)和大装甲板(约4.0)
-    // 设为 0.8 ~ 4.8 比较安全，排除掉距离极近或极远的组合
-    if (ratio < 1.5f || ratio > 4.6f) return false;
+	// 排除过近或过远的灯条组合
+    if (ratio < 1.5f || ratio > 4.3f) return false;
+    if (ratio > 2.8f && ratio < 3.8f) return false;
 
     // 高度差筛选 (防止错位)
     float y_diff = std::abs(lb1.center.y - lb2.center.y);
