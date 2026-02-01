@@ -4,6 +4,12 @@
 #include "armor_def.h"
 #include <vector>
 
+struct MatchCandidate {
+    size_t idx1;
+    size_t idx2;
+    float score; // 分数越小越好
+};
+
 class ArmorMatcher {
 public:
     // 匹配灯条对

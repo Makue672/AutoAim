@@ -5,6 +5,7 @@
 
 // 敌方颜色枚举
 enum class EnemyColor { RED, BLUE };
+enum class ArmorType { SMALL, LARGE };
 
 // 灯条结构体
 struct LightBar {
@@ -27,8 +28,9 @@ struct Armor {
     double distance;          // 距离 (m)
     cv::Mat rvec;             // 旋转向量
     cv::Mat tvec;             // 平移向量
+	ArmorType type;          // 装甲板尺寸类型
 
-    Armor() : number(0), distance(0.0) {}// 默认构造函数
+    Armor() : number(0), distance(0.0), type(ArmorType::SMALL) {}// 默认构造函数
 };
 
 #endif // ARMOR_DEF_H

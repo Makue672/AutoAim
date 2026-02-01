@@ -23,7 +23,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
     cv::threshold(gray_img, binary_img, color_threshold_, 255, cv::THRESH_BINARY);
 
 	// 形态学膨胀，连接断开的部分（以便识别远处目标）
-    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 9));
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 5));
     cv::dilate(binary_img, binary_img, element);
 
     // 轮廓查找
@@ -32,7 +32,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
 
     // 筛选灯条
     for (const auto& contour : contours) {
-        if (cv::contourArea(contour) < 3) continue; // 过滤噪点
+        if (cv::contourArea(contour) < 20) continue; // 过滤噪点
 
         cv::RotatedRect r_rect = cv::minAreaRect(contour);
         cv::Size2f size = r_rect.size;
@@ -41,12 +41,12 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
         float length = std::max(size.width, size.height);
         float width = std::min(size.width, size.height);
 
-		if (length * width > 40000) continue; // 过滤过大目标（地面反光等）
+		if (length * width > 50000) continue; // 过滤过大目标（地面反光等）
 
         // 几何特征筛选
         float ratio = length / width;
 		// 通过长宽比筛选灯条
-        if (ratio < 2.5 || ratio > 15.0) continue;
+        if (ratio < 2.0 || ratio > 15.0) continue;
 
 		// 角度筛选
         float angle = r_rect.angle;
