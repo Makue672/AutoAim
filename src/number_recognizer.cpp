@@ -42,7 +42,7 @@ void NumberRecognizer::process(std::vector<Armor>& armors, const cv::Mat& src) {
         cv::Point2f center = (src_pts[0] + src_pts[1] + src_pts[2] + src_pts[3]) / 4.0f;
 
         float scale_height = 2.00f; //
-        float scale_width = 0.80f;  //
+        float scale_width = 0.70f;  //
 
         for (int i = 0; i < 4; i++) {
             cv::Point2f vec = src_pts[i] - center;
