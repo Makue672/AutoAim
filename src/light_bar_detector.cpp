@@ -6,29 +6,52 @@ LightBarDetector::LightBarDetector() {
 
 std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor enemy_color) {
     std::vector<LightBar> light_bars;
-    cv::Mat gray_img, binary_img;
+    cv::Mat gray_color;
     std::vector<cv::Mat> channels;
 
     cv::split(frame, channels);
 
     // 颜色差分预处理：增强目标颜色区域对比度
     if (enemy_color == EnemyColor::RED) {
-        cv::subtract(channels[2], channels[0], gray_img); // R - B
+        cv::subtract(channels[2], channels[0], gray_color); // R - B
     }
     else {
-        cv::subtract(channels[0], channels[2], gray_img); // B - R
+        cv::subtract(channels[0], channels[2], gray_color); // B - R
     }
 
-    // 二值化
-    cv::threshold(gray_img, binary_img, color_threshold_, 255, cv::THRESH_BINARY);
+    cv::Mat mask_color;
+	// 提取颜色区域（灯条边缘）
+    cv::threshold(gray_color, mask_color, 30, 255, cv::THRESH_BINARY);
 
-	// 形态学膨胀，连接断开的部分（以便识别远处目标）
-    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 5));
-    cv::dilate(binary_img, binary_img, element);
+	// 亮度预处理
+    cv::Mat gray_brightness;
+    cv::cvtColor(frame, gray_brightness, cv::COLOR_BGR2GRAY);
 
-    // 轮廓查找
+    cv::Mat mask_white;
+	// 提取过曝区域
+    cv::threshold(gray_brightness, mask_white, 240, 255, cv::THRESH_BINARY);
+
+    // 过曝区域验证
+	// 形态学膨胀：把颜色边缘膨胀使其能够与过曝区域接触
+    cv::Mat mask_color_dilate;
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 5)); // 竖向核
+    cv::dilate(mask_color, mask_color_dilate, element);
+
+	// 取交集（有效白色区域）
+    cv::Mat mask_valid_white;
+    cv::bitwise_and(mask_white, mask_color_dilate, mask_valid_white);
+
+	// 融合两部分结果
+    cv::Mat binary_final;
+    cv::bitwise_or(mask_color, mask_valid_white, binary_final);
+
+    // 闭运算：把颜色边缘和白色中心可能存在的缝隙填上
+    cv::morphologyEx(binary_final, binary_final, cv::MORPH_CLOSE, element);
+
+
+	// 轮廓的提取与筛选
     std::vector<std::vector<cv::Point>> contours;
-    cv::findContours(binary_img, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    cv::findContours(binary_final, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
     // 筛选灯条
     for (const auto& contour : contours) {
@@ -41,12 +64,11 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
         float length = std::max(size.width, size.height);
         float width = std::min(size.width, size.height);
 
-		if (length * width > 50000) continue; // 过滤过大目标（地面反光等）
 
         // 几何特征筛选
         float ratio = length / width;
 		// 通过长宽比筛选灯条
-        if (ratio < 2.0 || ratio > 15.0) continue;
+        if (ratio < 1.3 || ratio > 15.0) continue;
 
 		// 角度筛选
         float angle = r_rect.angle;

@@ -93,7 +93,6 @@ cv::Mat NumberRecognizer::getRoi(const Armor& armor, const cv::Mat& src) {
         if (hw_ratio < 0.8f) continue; 
 
         // 评分：面积越大越好，距离中心越近越好
-        // 这里主要看距离，距离加权大一点
         float score = (float)area - dist * 10.0f;
 
         if (score > best_score) {

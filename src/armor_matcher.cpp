@@ -70,7 +70,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
             // 计算比值：灯条间距 / 灯条平均长度
             float ratio = dis / avg_len;
 
-            if (ratio > 3.2f) {
+            if (ratio > 2.8f) {
                 armor.type = ArmorType::LARGE;
             }
             else {
@@ -86,9 +86,8 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
 
 			// 如果识别结果为0，说明不是有效数字
             if (label == 0) {
-                continue; // 跳过！这对灯条还有机会和其他灯条匹配
+				continue; // 跳过,该灯条还可继续使用
             }
-            // ------------------------------------------------------
 
             armor.number = label; // 既然算过了，顺便存下来
 
@@ -107,7 +106,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
 bool ArmorMatcher::isArmor(const LightBar& lb1, const LightBar& lb2) {
     // 角度差筛选
     float angle_diff = std::abs(lb1.angle - lb2.angle);
-    if (angle_diff > 8.0f) return false; 
+    if (angle_diff > 11.0f) return false; 
 
     // 长度差筛选
     float len1 = std::max(lb1.rect.size.width, lb1.rect.size.height);
@@ -121,7 +120,6 @@ bool ArmorMatcher::isArmor(const LightBar& lb1, const LightBar& lb2) {
 
 	// 排除过近或过远的灯条组合
     if (ratio < 1.5f || ratio > 4.3f) return false;
-    if (ratio > 2.8f && ratio < 3.8f) return false;
 
     // 高度差筛选 (防止错位)
     float y_diff = std::abs(lb1.center.y - lb2.center.y);
