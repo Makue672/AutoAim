@@ -13,6 +13,29 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
             const auto& lb2 = light_bars[j];
 
             if (isArmor(lb1, lb2)) {
+				// 检查两个灯条之间是否有其他灯条存在
+                bool has_light_inside = false;
+
+                // 定义这个潜在装甲板的 X 轴范围
+                float x_min = std::min(lb1.center.x, lb2.center.x);
+                float x_max = std::max(lb1.center.x, lb2.center.x);
+                // 定义 Y 轴范围
+                float y_min = std::min(lb1.center.y, lb2.center.y) - 5;
+                float y_max = std::max(lb1.center.y, lb2.center.y) + 5;
+
+                for (size_t k = 0; k < light_bars.size(); k++) {
+                    if (k == i || k == j) continue; // 跳过自己
+
+                    const auto& test_bar = light_bars[k];
+                    // 如果第三个灯条的中心点落在这个矩形范围内
+                    if (test_bar.center.x > x_min && test_bar.center.x < x_max &&
+                        test_bar.center.y > y_min && test_bar.center.y < y_max) {
+                        has_light_inside = true;
+                        break;
+                    }
+                }
+
+                if (has_light_inside) continue; // 中间有灯条直接跳过，不匹配
                 // 计算匹配误差
 
                 // 角度差误差
@@ -119,7 +142,7 @@ bool ArmorMatcher::isArmor(const LightBar& lb1, const LightBar& lb2) {
     float ratio = dis / avg_len;
 
 	// 排除过近或过远的灯条组合
-    if (ratio < 1.5f || ratio > 4.3f) return false;
+    if (ratio < 1.5f || ratio > 4.2f) return false;
 
     // 高度差筛选 (防止错位)
     float y_diff = std::abs(lb1.center.y - lb2.center.y);

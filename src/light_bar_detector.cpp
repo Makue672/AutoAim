@@ -55,7 +55,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
 
     // 筛选灯条
     for (const auto& contour : contours) {
-        if (cv::contourArea(contour) < 20) continue; // 过滤噪点
+        if (cv::contourArea(contour) < 5) continue; // 过滤噪点
 
         cv::RotatedRect r_rect = cv::minAreaRect(contour);
         cv::Size2f size = r_rect.size;
@@ -68,7 +68,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
         // 几何特征筛选
         float ratio = length / width;
 		// 通过长宽比筛选灯条
-        if (ratio < 1.3 || ratio > 15.0) continue;
+        if (ratio < 0.8 || ratio > 15.0) continue;
 
 		// 角度筛选
         float angle = r_rect.angle;
