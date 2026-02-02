@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cmath>
 #include "number_recognizer.h"
 
 NumberRecognizer::NumberRecognizer() {
@@ -13,59 +15,118 @@ NumberRecognizer::NumberRecognizer() {
 
 // 提取 ROI
 cv::Mat NumberRecognizer::getRoi(const Armor& armor, const cv::Mat& src) {
-    // 目标ROI大小（标准SVM输入大小）
-    const int roi_size = 32;
+	// 初步透视变换，得到正面数字图
+    const int TEMP_SIZE = 100;
     std::vector<cv::Point2f> dst_pts = {
-        {0, 0}, {(float)roi_size, 0},
-        {(float)roi_size, (float)roi_size}, {0, (float)roi_size}
+        {0, 0},
+        {(float)TEMP_SIZE, 0},
+        {(float)TEMP_SIZE, (float)TEMP_SIZE},
+        {0, (float)TEMP_SIZE}
     };
 
-    // 获取左右灯条的四个点
+	// 获取灯条点并进行y坐标排序
     cv::Point2f l_pts[4], r_pts[4];
     armor.left_light.rect.points(l_pts);
     armor.right_light.rect.points(r_pts);
 
-	// Y坐标排序
     auto sort_y = [](const cv::Point2f& a, const cv::Point2f& b) { return a.y < b.y; };
     std::sort(std::begin(l_pts), std::end(l_pts), sort_y);
     std::sort(std::begin(r_pts), std::end(r_pts), sort_y);
 
-    // 定义源图像上的四个关键点
+    // 计算角点
     cv::Point2f src_pts[4];
-
-    // 四个角点
-    // 左上
     src_pts[0] = (l_pts[0] + l_pts[1]) / 2.0f;
-    // 右上
     src_pts[1] = (r_pts[0] + r_pts[1]) / 2.0f;
-    // 右下
     src_pts[2] = (r_pts[2] + r_pts[3]) / 2.0f;
-    // 左下
     src_pts[3] = (l_pts[2] + l_pts[3]) / 2.0f;
 
-    // 计算当前框的中心
-    cv::Point2f center = (src_pts[0] + src_pts[1] + src_pts[2] + src_pts[3]) / 4.0f;
+    // 适度扩张
+	float expand_h = 0.8f; // 高度扩张比例
+	float expand_w = 0.2f; // 宽度扩张比例
 
-	float scale_height = 2.00f; // 高度放大比例
-	float scale_width = 0.70f;  // 宽度缩小比例
+    cv::Point2f vec_up = src_pts[0] - src_pts[3];
+    cv::Point2f vec_right = src_pts[1] - src_pts[0];
 
-	// 调整四个点以改变 ROI 大小
-    for (int i = 0; i < 4; i++) {
-        cv::Point2f vec = src_pts[i] - center;
-        src_pts[i].x = center.x + vec.x * scale_width;
-        src_pts[i].y = center.y + vec.y * scale_height;
+    src_pts[0] -= vec_right * expand_w - vec_up * expand_h;
+    src_pts[1] += vec_right * expand_w + vec_up * expand_h;
+    src_pts[3] -= vec_right * expand_w + vec_up * expand_h;
+    src_pts[2] += vec_right * expand_w - vec_up * expand_h;
+
+    // 执行透视变换
+    cv::Mat M = cv::getPerspectiveTransform(src_pts, dst_pts.data());
+    cv::Mat warp_roi;
+    cv::warpPerspective(src, warp_roi, M, cv::Size(TEMP_SIZE, TEMP_SIZE));
+
+    // 寻找中心最亮的白色物体
+    cv::Mat gray_roi, binary_roi;
+    cv::cvtColor(warp_roi, gray_roi, cv::COLOR_BGR2GRAY);
+    cv::threshold(gray_roi, binary_roi, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+
+    // 找轮廓
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(binary_roi, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    if (contours.empty()) return cv::Mat(); // 全黑，匹配错误
+
+    // 筛选最佳轮廓
+    int best_idx = -1;
+    float best_score = -1.0f;
+    cv::Point2f img_center(TEMP_SIZE / 2.0f, TEMP_SIZE / 2.0f);
+
+    for (size_t i = 0; i < contours.size(); i++) {
+        double area = cv::contourArea(contours[i]);
+
+		// 面积过滤
+        if (area < 150 || area > 6000) continue;
+
+        cv::Rect rect = cv::boundingRect(contours[i]);
+
+        // 位置过滤：计算轮廓中心到图像中心的距离
+        cv::Point2f center(rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f);
+        float dist = cv::norm(center - img_center);
+
+        // 太远则可能时灯条
+        if (dist > 30.0f) continue;
+
+        // 形状过滤：不是扁的
+        float hw_ratio = (float)rect.height / (float)rect.width;
+        if (hw_ratio < 0.8f) continue; 
+
+        // 评分：面积越大越好，距离中心越近越好
+        // 这里主要看距离，距离加权大一点
+        float score = (float)area - dist * 10.0f;
+
+        if (score > best_score) {
+            best_score = score;
+            best_idx = i;
+        }
     }
 
-    // 透视变换
-    cv::Mat M = cv::getPerspectiveTransform(src_pts, dst_pts.data());
-    cv::Mat roi;
-    cv::warpPerspective(src, roi, M, cv::Size(roi_size, roi_size));
+    // 如果没找到合适的轮廓，说明匹配的是空地
+    if (best_idx == -1) return cv::Mat();
 
-    // 二值化处理
-    cv::cvtColor(roi, roi, cv::COLOR_BGR2GRAY);
-    cv::threshold(roi, roi, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+    // 裁剪与补边，找到最佳轮廓的包围框
+    cv::Rect best_rect = cv::boundingRect(contours[best_idx]);
 
-    return roi;
+    // 从二值图中扣出这个数字
+    cv::Mat digit_roi = binary_roi(best_rect);
+
+    // 保持比例缩放
+
+    int max_side = std::max(best_rect.width, best_rect.height);
+    int pad_top = (max_side - best_rect.height) / 2;
+    int pad_bottom = max_side - best_rect.height - pad_top;
+    int pad_left = (max_side - best_rect.width) / 2;
+    int pad_right = max_side - best_rect.width - pad_left;
+
+    cv::Mat square_roi;
+    cv::copyMakeBorder(digit_roi, square_roi, pad_top, pad_bottom, pad_left, pad_right, cv::BORDER_CONSTANT, cv::Scalar(0));
+
+	// 最终缩放到 32x32
+    cv::Mat final_roi;
+    cv::resize(square_roi, final_roi, cv::Size(32, 32));
+
+    return final_roi;
 }
 
 // SVM 预测
