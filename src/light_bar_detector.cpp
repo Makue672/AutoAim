@@ -34,7 +34,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
     // 过曝区域验证
 	// 形态学膨胀：把颜色边缘膨胀使其能够与过曝区域接触
     cv::Mat mask_color_dilate;
-    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 5)); // 竖向核
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 8)); // 竖向核
     cv::dilate(mask_color, mask_color_dilate, element);
 
 	// 取交集（有效白色区域）
@@ -55,7 +55,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
 
     // 筛选灯条
     for (const auto& contour : contours) {
-        if (cv::contourArea(contour) < 5) continue; // 过滤噪点
+        if (cv::contourArea(contour) < 10) continue; // 过滤噪点
 
         cv::RotatedRect r_rect = cv::minAreaRect(contour);
         cv::Size2f size = r_rect.size;

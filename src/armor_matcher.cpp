@@ -52,7 +52,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
 
                 // 综合评分公式：加权求和
                 // 给长度差和高度差较高的权重
-                float score = angle_diff + len_diff_ratio * 100 + y_diff_ratio * 100;
+                float score = angle_diff + len_diff_ratio * 50 + y_diff_ratio * 100;
 
                 candidates.push_back({ i, j, score });
             }
@@ -93,7 +93,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
             // 计算比值：灯条间距 / 灯条平均长度
             float ratio = dis / avg_len;
 
-            if (ratio > 2.8f) {
+            if (ratio > 2.5f) {
                 armor.type = ArmorType::LARGE;
             }
             else {
@@ -112,7 +112,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
 				continue; // 跳过,该灯条还可继续使用
             }
 
-            armor.number = label; // 既然算过了，顺便存下来
+			armor.number = label; // 存下识别结果
 
             armor.number_img = roi;
             armors.push_back(armor);
