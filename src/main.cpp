@@ -45,10 +45,8 @@ int main() {
         auto light_bars = detector.detect(frame, EnemyColor::RED);
 
         // 装甲板匹配
-        auto armors = matcher.match(light_bars);
+        auto armors = matcher.match(light_bars, frame, &recognizer);
 
-        // 数字ROI提取
-        recognizer.process(armors, frame);
 
         // PnP 解算
         for (auto& armor : armors) {

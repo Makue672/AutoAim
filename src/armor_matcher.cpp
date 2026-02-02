@@ -2,7 +2,7 @@
 #include <algorithm> 
 #include <cmath>     
 
-std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars) {
+std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, const cv::Mat& frame, NumberRecognizer* recognizer) {
     std::vector<Armor> armors;
     std::vector<MatchCandidate> candidates;
 
@@ -44,7 +44,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars) 
 	// 记录已使用的灯条，防止重复使用
     std::vector<bool> used(light_bars.size(), false);
     
-    // 贪心算法生成最终结果
+    // 贪心算法+svm验证生成最终结果
     for (const auto& c : candidates) {
         // 如果这两个灯条都还没被使用过
         if (!used[c.idx1] && !used[c.idx2]) {
@@ -76,11 +76,25 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars) 
             else {
                 armor.type = ArmorType::SMALL;
             }
+            // svm验证
+
+            // 提取 ROI 
+            cv::Mat roi = recognizer->getRoi(armor, frame);
+
+            // 预测
+            int label = recognizer->predict(roi);
+
+			// 如果识别结果为0，说明不是有效数字
+            if (label == 0) {
+                continue; // 跳过！这对灯条还有机会和其他灯条匹配
+            }
             // ------------------------------------------------------
 
+            armor.number = label; // 既然算过了，顺便存下来
+
+            armor.number_img = roi;
             armors.push_back(armor);
 
-            // 标记这两个灯条已用，防止被其他组合重复使用
             used[c.idx1] = true;
             used[c.idx2] = true;
         }
