@@ -2,8 +2,6 @@
 #include <algorithm> 
 #include <cmath>     
 
-
-
 std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars) {
     std::vector<Armor> armors;
     std::vector<MatchCandidate> candidates;
