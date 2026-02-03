@@ -17,11 +17,11 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
                 bool has_light_inside = false;
 
                 // 定义这个潜在装甲板的 X 轴范围
-                float x_min = std::min(lb1.center.x, lb2.center.x);
-                float x_max = std::max(lb1.center.x, lb2.center.x);
+                float x_min = std::min(lb1.center.x, lb2.center.x) + 5;
+                float x_max = std::max(lb1.center.x, lb2.center.x) - 5;
                 // 定义 Y 轴范围
-                float y_min = std::min(lb1.center.y, lb2.center.y) - 5;
-                float y_max = std::max(lb1.center.y, lb2.center.y) + 5;
+                float y_min = std::min(lb1.center.y, lb2.center.y) - 20;
+                float y_max = std::max(lb1.center.y, lb2.center.y) + 20;
 
                 for (size_t k = 0; k < light_bars.size(); k++) {
                     if (k == i || k == j) continue; // 跳过自己

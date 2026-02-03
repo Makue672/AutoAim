@@ -29,7 +29,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
 
     cv::Mat mask_white;
 	// 提取过曝区域
-    cv::threshold(gray_brightness, mask_white, 240, 255, cv::THRESH_BINARY);
+    cv::threshold(gray_brightness, mask_white, 235, 255, cv::THRESH_BINARY);
 
     // 过曝区域验证
 	// 形态学膨胀：把颜色边缘膨胀使其能够与过曝区域接触
