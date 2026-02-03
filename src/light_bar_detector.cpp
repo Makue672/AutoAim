@@ -21,7 +21,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
 
     cv::Mat mask_color;
 	// 提取颜色区域（灯条边缘）
-    cv::threshold(gray_color, mask_color, 30, 255, cv::THRESH_BINARY);
+    cv::threshold(gray_color, mask_color, color_threshold_, 255, cv::THRESH_BINARY);
 
 	// 亮度预处理
     cv::Mat gray_brightness;
@@ -29,12 +29,12 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
 
     cv::Mat mask_white;
 	// 提取过曝区域
-    cv::threshold(gray_brightness, mask_white, 235, 255, cv::THRESH_BINARY);
+    cv::threshold(gray_brightness, mask_white, 240, 255, cv::THRESH_BINARY);
 
     // 过曝区域验证
 	// 形态学膨胀：把颜色边缘膨胀使其能够与过曝区域接触
     cv::Mat mask_color_dilate;
-    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 8)); // 竖向核
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 7)); // 竖向核
     cv::dilate(mask_color, mask_color_dilate, element);
 
 	// 取交集（有效白色区域）
@@ -68,7 +68,7 @@ std::vector<LightBar> LightBarDetector::detect(const cv::Mat& frame, EnemyColor 
         // 几何特征筛选
         float ratio = length / width;
 		// 通过长宽比筛选灯条
-        if (ratio < 0.8 || ratio > 15.0) continue;
+        if (ratio < 1.2 || ratio > 15.0) continue;
 
 		// 角度筛选
         float angle = r_rect.angle;
