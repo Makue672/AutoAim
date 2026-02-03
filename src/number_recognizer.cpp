@@ -42,7 +42,7 @@ cv::Mat NumberRecognizer::getRoi(const Armor& armor, const cv::Mat& src) {
 
     // 适度扩张
 	float expand_h = 0.8f; // 高度扩张比例
-	float expand_w = 0.2f; // 宽度扩张比例
+	float expand_w = 0.1f; // 宽度收缩比例
 
     cv::Point2f vec_up = src_pts[0] - src_pts[3];
     cv::Point2f vec_right = src_pts[1] - src_pts[0];

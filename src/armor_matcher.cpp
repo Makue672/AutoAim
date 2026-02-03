@@ -67,7 +67,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
 	// 记录已使用的灯条，防止重复使用
     std::vector<bool> used(light_bars.size(), false);
     
-    // 贪心算法+svm验证生成最终结果
+    // svm验证生成最终结果
     for (const auto& c : candidates) {
         // 如果这两个灯条都还没被使用过
         if (!used[c.idx1] && !used[c.idx2]) {
@@ -93,7 +93,7 @@ std::vector<Armor> ArmorMatcher::match(const std::vector<LightBar>& light_bars, 
             // 计算比值：灯条间距 / 灯条平均长度
             float ratio = dis / avg_len;
 
-            if (ratio > 2.5f) {
+            if (ratio > 3.1f) {
                 armor.type = ArmorType::LARGE;
             }
             else {
